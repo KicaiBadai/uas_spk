@@ -87,10 +87,14 @@
                         <i class="bi bi-pencil-square me-1"></i> Penilaian
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link fw-semibold text-warning" href="/topsis">
+                <li class="nav-item dropdown">
+                    <a class="nav-link fw-semibold text-warning dropdown-toggle" href="#" id="topsisDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-graph-up me-1"></i> Hasil TOPSIS
                     </a>
+                    <ul class="dropdown-menu shadow border-0" aria-labelledby="topsisDropdown">
+                        <li><a class="dropdown-item" href="/topsis"><i class="bi bi-trophy me-2"></i>Ranking per Sekolah</a></li>
+                        <li><a class="dropdown-item" href="/topsis/detail"><i class="bi bi-calculator me-2"></i>Detail Perhitungan Matriks</a></li>
+                    </ul>
                 </li>
             </ul>
         </div>

@@ -171,4 +171,110 @@ class TopsisController extends Controller
         compact('hasilPerSekolah')
     );
 }
+
+public function detail(Request $request)
+{
+    $schools = School::all();
+    $school_id = $request->input('school_id');
+
+    if ($school_id) {
+        $alternatifs = Player::where('school_id', $school_id)->get();
+        $selectedSchool = School::find($school_id);
+    } else {
+        $alternatifs = Player::all();
+        $selectedSchool = null;
+    }
+
+    $kriterias = Criterion::all();
+
+    if ($alternatifs->count() == 0 || $kriterias->count() == 0) {
+        return redirect('/topsis')->with('error', 'Data tidak lengkap untuk perhitungan.');
+    }
+
+    $matrixKeputusan = [];
+    foreach ($alternatifs as $index => $alternatif) {
+        foreach ($kriterias as $k_index => $kriteria) {
+            $nilai = Assessment::where('player_id', $alternatif->id)
+                ->where('criterion_id', $kriteria->id)
+                ->value('nilai') ?? 0;
+            $matrixKeputusan[$index][$k_index] = $nilai;
+        }
+    }
+
+    $matrixNormalisasi = [];
+    $pembagi = [];
+    foreach ($kriterias as $k_index => $kriteria) {
+        $sum = 0;
+        foreach ($alternatifs as $index => $alternatif) {
+            $sum += pow($matrixKeputusan[$index][$k_index], 2);
+        }
+        $pembagi[$k_index] = sqrt($sum);
+
+        foreach ($alternatifs as $index => $alternatif) {
+            $matrixNormalisasi[$index][$k_index] = $pembagi[$k_index] == 0 ? 0 : $matrixKeputusan[$index][$k_index] / $pembagi[$k_index];
+        }
+    }
+
+    $matrixTerbobot = [];
+    foreach ($alternatifs as $index => $alternatif) {
+        foreach ($kriterias as $k_index => $kriteria) {
+            $matrixTerbobot[$index][$k_index] = $matrixNormalisasi[$index][$k_index] * $kriteria->bobot;
+        }
+    }
+
+    $idealPositif = [];
+    $idealNegatif = [];
+    foreach ($kriterias as $k_index => $kriteria) {
+        $nilaiKolom = [];
+        foreach ($alternatifs as $index => $alternatif) {
+            $nilaiKolom[] = $matrixTerbobot[$index][$k_index];
+        }
+
+        if ($kriteria->tipe == 'benefit') {
+            $idealPositif[$k_index] = max($nilaiKolom);
+            $idealNegatif[$k_index] = min($nilaiKolom);
+        } else {
+            $idealPositif[$k_index] = min($nilaiKolom);
+            $idealNegatif[$k_index] = max($nilaiKolom);
+        }
+    }
+
+    $dPlus = [];
+    $dMinus = [];
+    $preferensi = [];
+    $ranking = [];
+
+    foreach ($alternatifs as $index => $alternatif) {
+        $jumlahPlus = 0;
+        $jumlahMinus = 0;
+
+        foreach ($kriterias as $k_index => $kriteria) {
+            $jumlahPlus += pow($matrixTerbobot[$index][$k_index] - $idealPositif[$k_index], 2);
+            $jumlahMinus += pow($matrixTerbobot[$index][$k_index] - $idealNegatif[$k_index], 2);
+        }
+
+        $dPlus[$index] = sqrt($jumlahPlus);
+        $dMinus[$index] = sqrt($jumlahMinus);
+
+        $penyebut = $dMinus[$index] + $dPlus[$index];
+        $pref = $penyebut == 0 ? 0 : $dMinus[$index] / $penyebut;
+        $preferensi[$index] = $pref;
+
+        $ranking[] = [
+            'nama_pemain' => $alternatif->nama_pemain,
+            'sekolah' => $alternatif->school->nama_sekolah ?? '-',
+            'nilai' => $pref
+        ];
+    }
+
+    usort($ranking, function ($a, $b) {
+        return $b['nilai'] <=> $a['nilai'];
+    });
+
+    return view('topsis.hasil', compact(
+        'schools', 'selectedSchool', 'school_id',
+        'alternatifs', 'kriterias', 'matrixKeputusan', 'matrixNormalisasi',
+        'matrixTerbobot', 'idealPositif', 'idealNegatif', 'dPlus', 'dMinus', 'preferensi', 'ranking'
+    ));
+}
 }

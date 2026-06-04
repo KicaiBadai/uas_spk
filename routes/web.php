@@ -19,4 +19,5 @@ Route::get('/assessments', [AssessmentController::class, 'index']);
 Route::post('/assessments', [AssessmentController::class, 'store']);
 
 Route::get('/topsis', [TopsisController::class, 'index']);
+Route::get('/topsis/detail', [TopsisController::class, 'detail'])->name('topsis.detail');
 Route::post('/topsis/calculate', [TopsisController::class, 'calculate']);
