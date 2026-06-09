@@ -163,7 +163,9 @@
                             <td class="text-center">{{ $loop->iteration }}</td>
                             <td class="fw-semibold">{{ $alternatif->nama_pemain ?? $alternatif->nama }}</td>
                             @foreach($kriterias as $k_index => $kriteria)
-                                <td class="text-center">{{ isset($matrixTerbobot[$index][$k_index]) ? number_format($matrixTerbobot[$index][$k_index], 4) : '0.0000' }}</td>
+                                 <td class="text-center">
+                                        {{ isset($matrixTerbobot[$index][$k_index]) ? number_format($matrixTerbobot[$index][$k_index], 4) : '0.0000' }}
+                                    </td>
                             @endforeach
                         </tr>
                         @endforeach

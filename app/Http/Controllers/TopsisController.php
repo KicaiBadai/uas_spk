@@ -73,7 +73,7 @@ class TopsisController extends Controller
 
                 $terbobot[$player->id][$criterion->id] =
                     $normalisasi[$player->id][$criterion->id]
-                    * $criterion->bobot;
+                    * ($criterion->bobot / 100);
             }
         }
 
@@ -218,7 +218,7 @@ public function detail(Request $request)
     $matrixTerbobot = [];
     foreach ($alternatifs as $index => $alternatif) {
         foreach ($kriterias as $k_index => $kriteria) {
-            $matrixTerbobot[$index][$k_index] = $matrixNormalisasi[$index][$k_index] * $kriteria->bobot;
+            $matrixTerbobot[$index][$k_index] = $matrixNormalisasi[$index][$k_index] * ($kriteria->bobot / 100);
         }
     }
 
